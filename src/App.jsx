@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import { haptic, H, GLOBAL_CSS } from "./motion.js";
+import { DepotOrderMgmt, DEPOT_ORDERS_INITIAL, DEPOT_DRIVERS } from "./depotOrders.jsx";
 
 /* ════════ DESIGN TOKENS ════════ */
 const T = {
@@ -1460,6 +1461,7 @@ const BUYER_NAV = [
 const DEPOT_NAV = [
   {id:"dash",label:"Dashboard",shortLabel:"Home",icon:"M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"},
   {id:"inbox",label:"Order Inbox",shortLabel:"Inbox",icon:"M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",badge:null},
+  {id:"orders",label:"Order Management",shortLabel:"Orders",icon:"M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"},
   {id:"sched",label:"Truck Schedule",shortLabel:"Schedule",icon:"M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"},
   {id:"buyers",label:"Buyers",shortLabel:"Buyers",icon:"M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"},
 ];
@@ -1503,12 +1505,19 @@ function DepotPortal({bp,addToast}){
   const [agoPrice,setAgoPrice]=useState(1185);
   const [incoming,setIncoming]=useState(INITIAL_INCOMING);
   const [slots,setSlots]=useState(INITIAL_SLOTS);
+  const [depotOrders,setDepotOrders]=useState(DEPOT_ORDERS_INITIAL);
   const pendingCount=incoming.filter(o=>o.status==="pending").length;
-  const depotNav=DEPOT_NAV.map(n=>n.id==="inbox"?{...n,badge:pendingCount>0?pendingCount:null}:n);
+  const ordersPendingCount=depotOrders.filter(o=>o.status==="pending").length;
+  const depotNav=DEPOT_NAV.map(n=>{
+    if(n.id==="inbox")return{...n,badge:pendingCount>0?pendingCount:null};
+    if(n.id==="orders")return{...n,badge:ordersPendingCount>0?ordersPendingCount:null};
+    return n;
+  });
   const activeN=depotNav.find(n=>n.id===active);
   const views={
     dash:<DepotDash isMobile={isMobile} addToast={addToast} pmsPrice={pmsPrice} setPmsPrice={setPmsPrice} agoPrice={agoPrice} setAgoPrice={setAgoPrice}/>,
     inbox:<DepotInbox isMobile={isMobile} addToast={addToast} incoming={incoming} setIncoming={setIncoming}/>,
+    orders:<DepotOrderMgmt isMobile={isMobile} addToast={addToast} depotOrders={depotOrders} setDepotOrders={setDepotOrders} drivers={DEPOT_DRIVERS}/>,
     sched:<TruckSched isMobile={isMobile} addToast={addToast} slots={slots} setSlots={setSlots} incoming={incoming}/>,
     buyers:<BuyerNetwork isMobile={isMobile} addToast={addToast}/>,
   };
@@ -1591,3 +1600,4 @@ export default function VentrylApp(){
     </div>
   );
 }
+// PLACEHOLDER - will be replaced
